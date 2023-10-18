@@ -1,44 +1,54 @@
-# Loading necessary libraries
 library(ggplot2)
 
-# Fetching data
-data <- airquality
+clean_data <- function(data) {
+  return(na.omit(data))
+}
 
-# Data Cleaning - Remove rows with NA
-data <- na.omit(data)
+calculate_avg_solar <- function(data) {
+  return(aggregate(Solar.R ~ Month, data, mean))
+}
 
-# Analysis Part 1: Calculate average Solar Radiation for each month
-avg_solar <- aggregate(Solar.R ~ Month, data, mean)
-avg_solar
+calculate_correlations <- function(data) {
+  return(sapply(unique(data$Month), function(m) {
+    cor(data$Ozone[data$Month == m], data$Solar.R[data$Month == m])
+  }))
+}
 
-# Analysis Part 2: Correlation between Ozone and Solar Radiation for each month
-correlations <- sapply(unique(data$Month), function(m) {
-  cor(data$Ozone[data$Month == m], data$Solar.R[data$Month == m])
-})
-
-names(correlations) <- c("May", "June", "July", "August", "September")
-print(correlations)
-
-# Visualization
 shape_assignment <- function(cor_value) {
   if (cor_value > 0.5) {
     return(19)
-  } else if (cor_value > 0 & cor_value <= 0.5) {
+  } else if (cor_value > 0) {
     return(17)
   } else {
     return(15)
   }
 }
 
-# Save Plots
-for (m in unique(data$Month)) {
-  month_name <- month.abb[m]
-  shape <- shape_assignment(correlations[month_name])
-  g <- ggplot(data[data$Month == m,], aes(x = Solar.R, y = Ozone)) + 
-    geom_point(shape = shape) + 
-    ggtitle(month_name)
-  ggsave(paste0("plot_", tolower(month_name), ".png"), g)
+plot_data_by_month <- function(data, correlations) {
+  for (m in unique(data$Month)) {
+    month_name <- month.abb[m]
+    shape <- shape_assignment(correlations[month_name])
+    g <- ggplot(data[data$Month == m,], aes(x = Solar.R, y = Ozone)) + 
+      geom_point(shape = shape) + 
+      ggtitle(month_name)
+    ggsave(paste0("plot_", tolower(month_name), ".png"), g)
+  }
 }
 
-# Save data
-write.csv(data, "cleaned_data.csv", row.names = FALSE)
+save_cleaned_data <- function(data) {
+  write.csv(data, "cleaned_data.csv", row.names = FALSE)
+}
+
+# Main Execution
+data <- airquality
+data <- clean_data(data)
+
+avg_solar <- calculate_avg_solar(data)
+print(avg_solar)
+
+correlations <- calculate_correlations(data)
+print(correlations)
+
+plot_data_by_month(data, correlations)
+
+save_cleaned_data(data)
