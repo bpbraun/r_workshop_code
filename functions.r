@@ -1,3 +1,7 @@
+library(dplyr)
+library(ggplot2)
+library(readr)
+
 clean_data <- function(data) {
   return(na.omit(data))
 }
@@ -74,3 +78,6 @@ analyze_airquality_data <- function(input_data) {
   
   save_cleaned_data(cleaned_data)
 }
+
+# Snapshot the environment after all installations
+renv::snapshot()
